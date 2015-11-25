@@ -244,13 +244,100 @@ void ofxOpticalFlowFarneback::draw(int width, int height,  float lineScale, int 
 	}
 }
 
-void ofxOpticalFlowFarneback::drawColored(int width, int height,  float lineScale, int res) {
+void ofxOpticalFlowFarneback::drawColored(int width, int height, float lineScale, int res) {
+	
+	bool rightSize = (sizeSml.width == width && sizeSml.height == height);
+	
+	ofPoint vel;
+	ofMesh velMesh;
+	
+	velMesh.setMode(OF_PRIMITIVE_LINES);
+	
+	for(int x=0; x<width; x+=res) {
+		for(int y=0; y<height; y+=res) {
+			if(rightSize) {
+				vel = getVelAtPixel(x, y);
+			}
+			else {
+				vel = getVelAtNorm(x / (float)width, y / (float)height);
+			}
+			
+			if(vel.length() < 1) {  // smaller then 1 pixel, no point drawing.
+				continue;
+			}
+			ofVec3f p(x,y);
+			ofVec3f vc = vel;
+			vc.normalize();
+			float hue = (atan2(vc.y, vc.x)+3.14159265)/(3.14159265*2.0);
+			ofFloatColor c;
+			//float b = abs(vc.x);	//j
+			//if (b < .9) b=0.0;
+			c.setHsb( hue, 1.0, 1.0 );
+			c.a = .25;
+			velMesh.addColor(c);
+			velMesh.addVertex(p);
+			c.a = 0.0;
+			velMesh.addColor(c);
+			velMesh.addVertex(p+vel*lineScale);
+		}
+	}
+	
+	ofPushStyle();
+	ofEnableAlphaBlending();
+	velMesh.draw();
+	ofPopStyle();
+}
+
+
+void ofxOpticalFlowFarneback::drawColoredX(int width, int height, float lineScale, int res, float thresh) {
+	
+	bool rightSize = (sizeSml.width == width && sizeSml.height == height);
+	
+	ofPoint vel;
+	ofMesh velMesh;
+	
+	velMesh.setMode(OF_PRIMITIVE_POINTS);
+	
+	for(int x=0; x<width; x+=res) {
+		for(int y=0; y<height; y+=res) {
+			if(rightSize) {
+				vel = getVelAtPixel(x, y);
+			}
+			else {
+				vel = getVelAtNorm(x / (float)width, y / (float)height);
+			}
+			
+			if(vel.length() < 1) {  // smaller then 1 pixel, no point drawing.
+				continue;
+			}
+			ofVec3f p(x,y);
+			ofVec3f vc = vel;
+			vc.normalize();
+			float hue = (atan2(vc.y, vc.x)+3.14159265)/(3.14159265*2.0);
+			ofFloatColor c;
+			float b = abs(vc.x);	//j
+			if (b < thresh) b=0.0;
+			c.setHsb( hue, 0.0, b );
+			//			c.a = .25;
+			velMesh.addColor(c);
+			velMesh.addVertex(p);
+		}
+	}
+	
+	ofPushStyle();
+	velMesh.draw();
+	ofPopStyle();
+}
+
+
+void ofxOpticalFlowFarneback::drawColoredX(ofPixels& image,  float lineScale, int res, float thresh) {
+
+	int width = image.getWidth();
+	int height = image.getHeight();
+	
 	bool rightSize = (sizeSml.width == width && sizeSml.height == height);
 
 	ofPoint vel;
-	ofMesh velMesh;
-
-	velMesh.setMode(OF_PRIMITIVE_LINES);
 
 	for(int x=0; x<width; x+=res) {
 		for(int y=0; y<height; y+=res) {
@@ -260,29 +347,17 @@ void ofxOpticalFlowFarneback::drawColored(int width, int height,  float lineScal
 			else {
 				vel = getVelAtNorm(x / (float)width, y / (float)height);
 			}
-
 			if(vel.length() < 1) {  // smaller then 1 pixel, no point drawing.
 				continue;
 			}
-			ofVec3f p(x,y);
-			ofVec3f vc = vel;
-			vc.normalize();
-			float hue = (atan2(vc.y, vc.x)+3.14159265)/(3.14159265*2.0);
-			ofFloatColor c;
-			c.setHsb(hue, 1.0, 1.0);
-			c.a = 0.25;
-			velMesh.addColor(c);
-			velMesh.addVertex(p);
-			c.a = 0.0;
-			velMesh.addColor(c);
-			velMesh.addVertex(p+vel*lineScale);
+			
+			vel.normalize();
+		
+			if(abs(vel.x)>thresh){
+				image.setColor(x, y, ofColor(255));
+			}
 		}
 	}
-
-	ofPushStyle();
-	ofEnableAlphaBlending();
-	velMesh.draw();
-	ofPopStyle();
 }
 
 ///////////////////////////////////////////

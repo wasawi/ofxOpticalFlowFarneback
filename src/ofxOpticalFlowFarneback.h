@@ -45,7 +45,9 @@ class ofxOpticalFlowFarneback {
 
 		void draw(int width, int height, float lineScale = 10, int res = 10);
 		void drawColored(int width, int height, float lineScale = 10, int res = 10);
-
+		void drawColoredX(int width, int height, float lineScale = 10, int res = 10, float thresh = .9);
+		void drawColoredX(ofPixels& image,  float lineScale = 10, int res = 3, float thresh = .9);
+	
 		void setMirror(bool mirrorHorizontally, bool mirrorVertically);
 		bool isInitialized() { return bInitialised; }
 
